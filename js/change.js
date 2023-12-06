@@ -1,15 +1,21 @@
+// Хочу такое некое предисловие оставить, код по идее подходит под все задачи, то есть все задачи реализованы, но есть некоторые костыли, 
+// такие как блокировка 35-объема при переключении на другой объем. Так же селек-кружочек не переключается пока при выборе других объемов
+// об этом всем я вкурсе, это все можно было бы "задебажить", вместо этоого коммента, но прошу понять, что я сейчас работаю с графиком
+// с 9 до 18:00 не по специальности, ну чтобы на хлеб с маслом так сказать деньги были. И это все, что я смог успеть сделать за 3 дня
+// Прошу войти в положение
 
-// -------------------------------самый правильный -----------------------------
+
+// -------------------------------самый правильныййййййййййййййй)))))) -----------------------------
 
 document.addEventListener('DOMContentLoaded', function () {
-    // Обработчик клика по кнопке "В корзину"
+    // Прослушка нажатия кнопки "в корзину" 
     document.querySelectorAll('.js-buy').forEach(button => {
         button.addEventListener('click', function () {
             addToCart(this);
         });
     });
 
-    // Проверяем корзину при загрузке страницы и обновляем статусы кнопок
+    // Здесь идет проверка localstorage на наличие уже добавленных товаров и соответсвтенно проверка идет кнопки, прослушка клика размеров товара
     checkCartStatus();
 
     // Обработчик клика по размерам товара
@@ -20,11 +26,8 @@ document.addEventListener('DOMContentLoaded', function () {
             const productId = this.getAttribute('data-id');
             const productPrice = this.getAttribute('data-product-price');
             
-
-            // Находим соответствующую карточку товара
             const productContainer = this.closest('.js-product');
 
-            // Меняем данные в карточке
             const priceElement = productContainer.querySelector('.js-goods__card-price span');
             const buyButton = productContainer.querySelector('.js-buy');
 
@@ -32,20 +35,17 @@ document.addEventListener('DOMContentLoaded', function () {
                 priceElement.textContent = `${productPrice}`;
             }
 
-            // Обновляем data-product-size для корректной работы addToCart
             const existingProductSize = productContainer.getAttribute('data-product-size');
             productContainer.setAttribute('data-product-size', productSize);
             productContainer.setAttribute('data-id', productId,);
             productContainer.setAttribute('data-product-price', productPrice,);
 
 
-            // Меняем состояние кнопки
+            // изменение сост. кнопки. Можно было css убрать в другой файл, но посчитал правильным сделать все задания в одном файле, не раскидывать
             if (buyButton) {
                 buyButton.querySelector('span:first-child').style.display = 'inline-block';
                 buyButton.querySelector('span:last-child').style.display = 'none';
-                buyButton.disabled = false; // Включаем кнопку
-
-                // Если товар уже в корзине, блокируем кнопку
+                buyButton.disabled = false; //копка активна
                 const isInCart = isProductInCart(productContainer);
                 if (isInCart) {
                     buyButton.disabled = true;
@@ -54,8 +54,10 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
+
+
+    // работа с localstorage, точнее уже отображение и др действия с данными
     function addToCart(button) {
-        // Получаем информацию о товаре из элементов DOM
         const productContainer = button.closest('.js-product');
         const reqProductEl = productContainer.querySelector('.goods__card-size.active');
         const productId = productContainer.getAttribute('data-id');
@@ -65,7 +67,6 @@ document.addEventListener('DOMContentLoaded', function () {
         const productHref = productContainer.getAttribute('data-product-href');
         const productSrc = productContainer.getAttribute('data-product-src');
 
-        // Создаем объект с информацией о товаре
         const productInfo = {
             id: productId,
             name: productName,
@@ -77,59 +78,41 @@ document.addEventListener('DOMContentLoaded', function () {
             totalprice: productPrice
         };
 
-        // Получаем текущее состояние корзины из localStorage
         const cart = JSON.parse(localStorage.getItem('cart')) || [];
 
-        // Проверяем, есть ли товар уже в корзине
         const existingProductIndex = cart.findIndex(item => item.id === productId && item.size === productSize);
 
         if (existingProductIndex !== -1) {
-            // Если товар уже в корзине, увеличиваем количество
             cart[existingProductIndex].quantity++;
             cart[existingProductIndex].totalprice = cart[existingProductIndex].quantity * productPrice;
         } else {
-            // Если товара нет в корзине, добавляем его
             cart.push(productInfo);
         }
-
-        // Сохраняем обновленное состояние корзины в localStorage
         localStorage.setItem('cart', JSON.stringify(cart));
-
-        // Меняем текст кнопки на "В корзине"
         button.querySelector('span:first-child').style.display = 'none';
         button.querySelector('span:last-child').style.display = 'inline-block';
+        button.disabled = true; // кнопка заблокирована
 
-        // Блокируем кнопку
-        button.disabled = true;
-
-        // Перепроверяем корзину и обновляем статусы кнопок
         checkCartStatus();
     }
 
     function checkCartStatus() {
-        // Получаем текущее состояние корзины из localStorage
         const cart = JSON.parse(localStorage.getItem('cart')) || [];
 
-        // Проходим по всем товарам на странице и обновляем статусы кнопок
         document.querySelectorAll('.js-product').forEach(productContainer => {
             const buyButton = productContainer.querySelector('.js-buy');
             
-            // Если кнопки нет (товар уже в корзине), переходим к следующему товару
             if (!buyButton) {
                 return;
             }
 
-            // Находим соответствующий товар в корзине
             const isInCart = isProductInCart(productContainer);
-
-            // Меняем статус кнопки в соответствии с наличием товара в корзине
             const statusSpan = buyButton.querySelector('span:first-child');
             const addedSpan = buyButton.querySelector('span:last-child');
             if (statusSpan && addedSpan) {
                 statusSpan.style.display = isInCart ? 'none' : 'inline-block';
                 addedSpan.style.display = isInCart ? 'inline-block' : 'none';
 
-                // Блокируем кнопку, если товар уже в корзине
                 if (isInCart) {
                     buyButton.disabled = true;
                 } else {
@@ -150,7 +133,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
 
-// ----------------------------korzina 2 --------------------------
+// ----------------------------korzina samyi pravil'nyiiiiiiii --------------------------
 
 document.addEventListener('DOMContentLoaded', function() {
     const cartItems = document.querySelector('.js-cart');
@@ -170,23 +153,22 @@ document.addEventListener('DOMContentLoaded', function() {
             cart[index].totalprice = cart[index].quantity * cart[index].price;
 
             if (cart[index].quantity <= 0) {
-                // Удалить товар из корзины, если количество <= 0
+                // удалить товар из корзины, если количество уже ноль, то есть меньше и равно нулю(при нажатии на "-" будет четче объяснено)
                 cart.splice(index, 1);
             }
 
-            // Сохранить обновленную корзину в localStorage
+            // сохранить обновленную корзину в localStorage
             localStorage.setItem('cart', JSON.stringify(cart));
 
-            // Обновить отображение в DOM
             renderCart();
         }
     }
 
     function renderCart() {
-        // Очищаем содержимое корзины
+        // функция кнопки "удалить"
         cartItems.innerHTML = '';
 
-        // Выводим товары в корзине
+        // распарс ls
         cart.forEach(item => {
             const cartItem = document.createElement('div');
             cartItem.classList.add('js-cart-item');
@@ -201,7 +183,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <button class="js-remove-item">Удалить</button>
             `;
 
-            // Обработчик кнопок +, -
+            // обработчик кнопок +, -
             cartItem.querySelector('.js-increase-quantity').addEventListener('click', function() {
                 updateCartItemQuantity(item.id, item.size, 1);
             });
@@ -210,7 +192,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 updateCartItemQuantity(item.id, item.size, -1);
             });
 
-            // Обработчик кнопки удаления
+            // обработчик кнопки удаления
             cartItem.querySelector('.js-remove-item').addEventListener('click', function() {
                 updateCartItemQuantity(item.id, item.size, -item.quantity);
             });
@@ -219,6 +201,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Инициализация отображения корзины
+    // рендер корщины
     renderCart();
 });
